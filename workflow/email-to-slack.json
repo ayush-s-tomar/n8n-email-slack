@@ -1,0 +1,119 @@
+{
+  "name": "Email → AI Summary → Slack",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyMinute" }]
+        },
+        "filters": {}
+      },
+      "id": "gmail-trigger",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "credentials": {
+        "gmailOAuth2": { "id": "YOUR_GMAIL_CREDENTIAL_ID", "name": "Gmail account" }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.from.value[0].address }}",
+              "operation": "notContains",
+              "value2": "noreply"
+            },
+            {
+              "value1": "={{ $json.from.value[0].address }}",
+              "operation": "notContains",
+              "value2": "no-reply"
+            },
+            {
+              "value1": "={{ $json.from.value[0].address }}",
+              "operation": "notContains",
+              "value2": "newsletter"
+            },
+            {
+              "value1": "={{ $json.from.value[0].address }}",
+              "operation": "notContains",
+              "value2": "mailer-daemon"
+            }
+          ]
+        },
+        "combineConditions": "AND"
+      },
+      "id": "filter-noise",
+      "name": "Filter Noise",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "complete",
+        "model": "gpt-4o-mini",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a helpful email assistant. Summarize emails clearly and concisely."
+            },
+            {
+              "role": "user",
+              "content": "=Summarize this email in 2-3 bullet points. Highlight any action items required.\n\nSubject: {{ $json.subject }}\nFrom: {{ $json.from.value[0].address }}\n\nBody:\n{{ $json.text }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 300
+        }
+      },
+      "id": "ai-summarizer",
+      "name": "AI Summarizer",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": {
+        "openAiApi": { "id": "YOUR_OPENAI_CREDENTIAL_ID", "name": "OpenAI account" }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "channel": "#email-digest",
+        "text": "=*📧 New Email Summary*\n\n*From:* {{ $('Gmail Trigger').item.json.from.value[0].name }} ({{ $('Gmail Trigger').item.json.from.value[0].address }})\n*Subject:* {{ $('Gmail Trigger').item.json.subject }}\n*Received:* {{ $('Gmail Trigger').item.json.date }}\n\n{{ $json.message.content }}\n\n_——_",
+        "otherOptions": {
+          "mrkdwn": true
+        }
+      },
+      "id": "slack-post",
+      "name": "Post to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "credentials": {
+        "slackOAuth2Api": { "id": "YOUR_SLACK_CREDENTIAL_ID", "name": "Slack account" }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [[{ "node": "Filter Noise", "type": "main", "index": 0 }]]
+    },
+    "Filter Noise": {
+      "main": [[{ "node": "AI Summarizer", "type": "main", "index": 0 }]]
+    },
+    "AI Summarizer": {
+      "main": [[{ "node": "Post to Slack", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

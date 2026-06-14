@@ -27,7 +27,8 @@ Workflow running on n8n.cloud — connects Gmail → Groq AI → Slack automatic
 | Deployment | n8n Cloud |
 
 ## Project Structure
-\```
+
+```
 n8n-email-slack/
 ├── workflow/
 │   ├── email-to-slack-groq.json   # n8n workflow (Groq version)
@@ -35,7 +36,7 @@ n8n-email-slack/
 ├── docs/
 │   └── SETUP_GUIDE.md             # Step-by-step setup guide
 └── main.py                        # Project entry point
-\```
+```
 
 ## Setup & Installation
 

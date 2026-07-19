@@ -3,9 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "pollTimes": {
-          "item": [{ "mode": "everyMinute" }]
-        },
+        "pollTimes": { "item": [{ "mode": "everyMinute" }] },
         "filters": {}
       },
       "id": "gmail-trigger",
@@ -21,21 +19,14 @@
       "parameters": {
         "conditions": {
           "string": [
-            {
-              "value1": "={{ $json.from.value[0].address }}",
-              "operation": "notContains",
-              "value2": "noreply"
-            },
-            {
-              "value1": "={{ $json.from.value[0].address }}",
-              "operation": "notContains",
-              "value2": "no-reply"
-            },
-            {
-              "value1": "={{ $json.from.value[0].address }}",
-              "operation": "notContains",
-              "value2": "newsletter"
-            }
+            { "value1": "={{ $json.from.value[0].address }}", "operation": "notContains", "value2": "noreply" },
+            { "value1": "={{ $json.from.value[0].address }}", "operation": "notContains", "value2": "no-reply" },
+            { "value1": "={{ $json.from.value[0].address }}", "operation": "notContains", "value2": "newsletter" },
+            { "value1": "={{ $json.from.value[0].address }}", "operation": "notContains", "value2": "mailer-daemon" },
+            { "value1": "={{ $json.subject }}", "operation": "notContains", "value2": "OTP" },
+            { "value1": "={{ $json.subject }}", "operation": "notContains", "value2": "One-Time Password" },
+            { "value1": "={{ $json.subject }}", "operation": "notContains", "value2": "verification" },
+            { "value1": "={{ $json.subject }}", "operation": "notContains", "value2": "password reset" }
           ]
         },
         "combineConditions": "AND"
@@ -54,17 +45,13 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [
-            { "name": "Content-Type", "value": "application/json" }
-          ]
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": []
-        },
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"llama-3.1-8b-instant\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a helpful email assistant. Summarize emails clearly and concisely.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Summarize this email in 2-3 bullet points. Highlight any action items.\\n\\nSubject: {{ $json.subject }}\\nFrom: {{ $json.from.value[0].address }}\\n\\nBody:\\n{{ $json.text }}\"\n    }\n  ],\n  \"max_tokens\": 300,\n  \"temperature\": 0.3\n}",
-        "options": {}
+        "jsonBody": "={\n  \"model\": \"llama-3.1-8b-instant\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an email triage assistant. Respond with ONLY valid JSON, no markdown fences, no extra text. Schema: {\\\"priority\\\": \\\"URGENT|NORMAL|LOW\\\", \\\"emoji\\\": \\\"🔴|🟡|🟢\\\", \\\"summary\\\": [\\\"bullet1\\\", \\\"bullet2\\\"], \\\"action_item\\\": \\\"string or None\\\"}. URGENT = needs action within 24h. NORMAL = standard email. LOW = FYI only.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Subject: {{ $json.subject }}\\nFrom: {{ $json.from.value[0].address }}\\n\\nBody:\\n{{ $json.text.slice(0, 3000) }}\"\n    }\n  ],\n  \"max_tokens\": 300,\n  \"temperature\": 0.2\n}",
+        "onError": "continueErrorOutput",
+        "options": { "timeout": 15000 }
       },
       "id": "groq-summarizer",
       "name": "Groq AI Summarizer",
@@ -77,36 +64,58 @@
     },
     {
       "parameters": {
+        "jsCode": "let raw = $input.item.json.choices[0].message.content.trim();\nraw = raw.replace(/^```json\\s*/i, '').replace(/```$/, '').trim();\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = { priority: 'NORMAL', emoji: '🟡', summary: [raw.slice(0, 300)], action_item: 'None' };\n}\nreturn {\n  json: {\n    priority: parsed.priority || 'NORMAL',\n    emoji: parsed.emoji || '🟡',\n    summary_bullets: (parsed.summary || []).map(s => '• ' + s).join('\\n'),\n    action_item: parsed.action_item || 'None'\n  }\n};"
+      },
+      "id": "parse-ai-response",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 220]
+    },
+    {
+      "parameters": {
         "authentication": "oAuth2",
         "channel": "#email-digest",
-        "text": "=*📧 New Email Summary*\n\n*From:* {{ $('Gmail Trigger').item.json.from.value[0].name }}\n*Subject:* {{ $('Gmail Trigger').item.json.subject }}\n\n{{ $json.choices[0].message.content }}\n\n_——_",
-        "otherOptions": {
-          "mrkdwn": true
-        }
+        "text": "={{ $json.emoji }} *{{ $('Gmail Trigger').item.json.subject }}*\n_{{ $('Gmail Trigger').item.json.from.value[0].name }} · {{ $json.priority }}_\n\n{{ $json.summary_bullets }}\n\n*Action:* {{ $json.action_item }}",
+        "otherOptions": { "mrkdwn": true }
       },
       "id": "slack-post",
       "name": "Post to Slack",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2,
-      "position": [900, 300],
+      "position": [1120, 220],
+      "credentials": {
+        "slackOAuth2Api": { "id": "YOUR_SLACK_CREDENTIAL_ID", "name": "Slack account" }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "channel": "#automation-alerts",
+        "text": "=⚠️ Email → Slack workflow failed\n\n*Node:* Groq AI Summarizer\n*Email subject:* {{ $('Gmail Trigger').item.json.subject }}\n*Error:* {{ $json.error?.message || 'Unknown error' }}\n\nCheck the n8n execution log for details.",
+        "otherOptions": { "mrkdwn": true }
+      },
+      "id": "slack-error-alert",
+      "name": "Post Error Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [900, 420],
       "credentials": {
         "slackOAuth2Api": { "id": "YOUR_SLACK_CREDENTIAL_ID", "name": "Slack account" }
       }
     }
   ],
   "connections": {
-    "Gmail Trigger": {
-      "main": [[{ "node": "Filter Noise", "type": "main", "index": 0 }]]
-    },
-    "Filter Noise": {
-      "main": [[{ "node": "Groq AI Summarizer", "type": "main", "index": 0 }]]
-    },
+    "Gmail Trigger": { "main": [[{ "node": "Filter Noise", "type": "main", "index": 0 }]] },
+    "Filter Noise": { "main": [[{ "node": "Groq AI Summarizer", "type": "main", "index": 0 }]] },
     "Groq AI Summarizer": {
-      "main": [[{ "node": "Post to Slack", "type": "main", "index": 0 }]]
-    }
+      "main": [
+        [{ "node": "Parse AI Response", "type": "main", "index": 0 }],
+        [{ "node": "Post Error Alert", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse AI Response": { "main": [[{ "node": "Post to Slack", "type": "main", "index": 0 }]] }
   },
   "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  }
+  "settings": { "executionOrder": "v1" }
 }

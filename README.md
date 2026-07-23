@@ -6,35 +6,11 @@
 ![Gmail](https://img.shields.io/badge/Gmail-API-red?logo=gmail&logoColor=white)
 ![Slack](https://img.shields.io/badge/Slack-Integration-4A154B?logo=slack&logoColor=white)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
+![CI](https://github.com/<your-username>/<your-repo>/actions/workflows/validate.yml/badge.svg)
 
 An automation workflow that reads Gmail emails, summarizes them using Groq AI, and posts the summary to a Slack channel — fully automated, runs every minute.
 
-## 🎥 Demo Video
-
-https://github.com/user-attachments/assets/14e81b8f-24d5-429d-87e4-c2d8aa7955a5
-
-## 🌐 Live Demo
-
-Workflow running on n8n.cloud — connects Gmail → Groq AI → Slack automatically.
-[ayush22.app.n8n.cloud](https://ayush22.app.n8n.cloud)
-
----
-
-## 📊 Stats
-
-![Dashboard](docs/Dashboard.png)
-
----
-
-## 🔄 Workflow
-
-![Workflow](docs/workflow.png)
-
----
-
-## 💬 Slack Output
-
-![Slack Output](docs/slack-output.png)
+> **Note:** This workflow isn't currently deployed live — the free tier limit on n8n.cloud was reached. Screenshots, GIF, and video below show it running.
 
 ---
 
@@ -44,9 +20,27 @@ Workflow running on n8n.cloud — connects Gmail → Groq AI → Slack automatic
 |---|---|---|
 | ![Screenshot 1](docs/n8n-1.png) | ![Screenshot 2](docs/n8n-2.png) | ![Screenshot 3](docs/n8n-3.png) |
 
+---
+
 ## 🎞️ Demo GIF
 
 ![Demo GIF](docs/n8n-demo.gif)
+
+---
+
+## 🖼️ Older Screenshots
+
+![Dashboard](docs/Dashboard.png)
+
+![Workflow](docs/workflow.png)
+
+![Slack Output](docs/slack-output.png)
+
+---
+
+## 🎥 Demo Video
+
+https://github.com/user-attachments/assets/14e81b8f-24d5-429d-87e4-c2d8aa7955a5
 
 ---
 

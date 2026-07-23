@@ -1,0 +1,42 @@
+name: Validate Workflow JSON
+
+on:
+  push:
+    paths:
+      - 'workflow/**.json'
+      - '.github/workflows/validate.yml'
+  pull_request:
+    paths:
+      - 'workflow/**.json'
+      - '.github/workflows/validate.yml'
+
+jobs:
+  validate-json:
+    name: Check JSON validity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Validate all JSON files in workflow/
+        run: |
+          echo "Validating JSON files in workflow/ ..."
+          find workflow -name "*.json" -print0 | while IFS= read -r -d '' file; do
+            echo "Checking: $file"
+            if ! python3 -m json.tool "$file" > /dev/null; then
+              echo "❌ Invalid JSON: $file"
+              exit 1
+            fi
+            echo "✅ Valid JSON: $file"
+          done
+
+      - name: Check for accidentally committed secrets
+        run: |
+          echo "Scanning workflow/ for potential leaked credentials..."
+          if grep -R -E "(api[_-]?key|secret|token|password)\s*[:=]\s*['\"][A-Za-z0-9_\-]{10,}['\"]" workflow/ ; then
+            echo "⚠️  Possible secret detected in workflow files. Please review before merging."
+            exit 1
+          else
+            echo "✅ No obvious secrets found."
+          fi

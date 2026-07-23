@@ -5,7 +5,10 @@
 ![Groq](https://img.shields.io/badge/AI-Groq-orange)
 ![Gmail](https://img.shields.io/badge/Gmail-API-red?logo=gmail&logoColor=white)
 ![Slack](https://img.shields.io/badge/Slack-Integration-4A154B?logo=slack&logoColor=white)
-![Status](https://img.shields.io/badge/status-active-brightgreen)
+![Status](https://img.shields.io/badge/status-inactive-lightgrey)
+![CI](https://github.com/<your-username>/<your-repo>/actions/workflows/validate.yml/badge.svg)
+
+> ✅ **Project complete** — this repo is no longer actively maintained. Feel free to fork or reuse the workflow, but no further updates are planned.
 
 An automation workflow that reads Gmail emails, summarizes them using Groq AI, and posts the summary to a Slack channel — fully automated, runs every minute.
 
@@ -13,7 +16,7 @@ An automation workflow that reads Gmail emails, summarizes them using Groq AI, a
 
 ---
 
-## 🖼️ Polished Screenshots
+## 🖼️ Screenshots
 
 | | | |
 |---|---|---|
@@ -27,7 +30,7 @@ An automation workflow that reads Gmail emails, summarizes them using Groq AI, a
 
 ---
 
-## 🖼️ Original Screenshots
+## 🖼️ Older Screenshots
 
 ![Dashboard](docs/Dashboard.png)
 

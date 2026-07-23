@@ -14,7 +14,7 @@ An automation workflow that reads Gmail emails, summarizes them using Groq AI, a
 
 ---
 
-## 🖼️ Screenshots
+## 🖼️ Polished Screenshots
 
 | | | |
 |---|---|---|
@@ -28,7 +28,7 @@ An automation workflow that reads Gmail emails, summarizes them using Groq AI, a
 
 ---
 
-## 🖼️ Older Screenshots
+## 🖼️ Original Screenshots
 
 ![Dashboard](docs/Dashboard.png)
 
